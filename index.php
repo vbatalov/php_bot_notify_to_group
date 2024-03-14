@@ -49,9 +49,6 @@ getRequest();
 /** Создать файл лога */
 function addLog(mixed $response_code, array $server, array $get): bool
 {
-    // наименование файла
-    $filename = LOG_FILE_NAME . ".csv";
-
     $header = [
         "DATE_TIME",
         "REMOTE_ADDR",
@@ -64,8 +61,8 @@ function addLog(mixed $response_code, array $server, array $get): bool
     $HTTP_USER_AGENT = $server['HTTP_USER_AGENT'] ?? "null";
 
 
-    if (!file_exists("logs/$filename")) {
-        fopen("logs/$filename", "w");
+    if (!file_exists(LOG_FILE_NAME)) {
+        fopen(LOG_FILE_NAME, "w");
         $data =
             [
                 $header,
@@ -79,7 +76,7 @@ function addLog(mixed $response_code, array $server, array $get): bool
                 ]
             ];
 
-        $writer = Writer::createFromPath("logs/$filename", 'w+');
+        $writer = Writer::createFromPath(LOG_FILE_NAME, 'w+');
     } else {
         $data =
             [
@@ -93,7 +90,7 @@ function addLog(mixed $response_code, array $server, array $get): bool
                 ]
             ];
 
-        $writer = Writer::createFromPath("logs/$filename", 'a+');
+        $writer = Writer::createFromPath(LOG_FILE_NAME, 'a+');
     }
     $writer->setDelimiter(';');
     $writer->insertAll($data);
