@@ -106,6 +106,9 @@ function sendMessage(array $GET): bool
 {
     $group = $GET['group'];
 
+    if (!isset(GROUPS[$group])) {
+        exit ("В конфигурации не найдено совпадений для запроса group = [$group]");
+    }
 
     try {
         $bot = new BotApi(GROUPS[$group]['token']);
