@@ -13,7 +13,7 @@ final class TelegramTest extends TestCase
         $query = [
             "text" => "<b>Текст</b> сообщения в параметре text=...text",
             "tags" => "Первый, Второй, С пробелами, Параметр tags",
-            "group" => 112865662,
+            "group" => "skyway",
             "Автор" => "Иван",
         ];
 

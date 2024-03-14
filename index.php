@@ -33,7 +33,7 @@ getRequest();
             if (!isset($_GET[$param])) exit ("Отсутствует обязательный параметр [$param]");
         }
 
-        $response_code = sendMessage(data: $_GET);
+        $response_code = sendMessage(GET: $_GET);
 
         if ($response_code == true) {
             addLog(response_code: 200, server: $_SERVER, get: $_GET);
@@ -100,17 +100,19 @@ function addLog(mixed $response_code, array $server, array $get): bool
 
 /**
  * Отправить сообщение в Telegram
- * @param array $data Данные GET запроса
+ * @param array $GET Данные GET запроса
  */
-function sendMessage(array $data): bool
+function sendMessage(array $GET): bool
 {
+    $group = $GET['group'];
+
 
     try {
-        $bot = new BotApi(token: TOKEN);
+        $bot = new BotApi(GROUPS[$group]['token']);
         $blade = new Blade('views', 'cache');
-        $text = $blade->render("message", ['data' => $data]);
+        $text = $blade->render("message", ['data' => $GET]);
 
-        if ($bot->sendMessage(chatId: $data['group'], text: $text, parseMode: "HTML")) {
+        if ($bot->sendMessage(chatId: GROUPS[$group]['chat_id'], text: $text, parseMode: "HTML")) {
             return true;
         };
     } catch (Exception $e) {
