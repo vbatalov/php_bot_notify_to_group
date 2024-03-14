@@ -1,6 +1,8 @@
 <?php
 
 use Carbon\Carbon;
+use JetBrains\PhpStorm\NoReturn;
+use League\Csv\Reader;
 use TelegramBot\Api\BotApi;
 use Symfony\Component\HttpFoundation\Request;
 use Jenssegers\Blade\Blade;
@@ -14,7 +16,7 @@ require "config.php";
 getRequest();
 
 
-function getRequest(): bool|string
+#[NoReturn] function getRequest()
 {
     new Request($_GET,
         $_POST,
@@ -25,14 +27,14 @@ function getRequest(): bool|string
 
 
     if (!empty($_GET)) {
-        $need_param = "текст";
+        $need_param = "text";
 
         if (isset($_GET[$need_param])) {
             $response_code = sendMessage(data: $_GET);
 
-            if ($response_code == 200) {
-                if (addLog(response_code: $response_code, server: $_SERVER, get: $_GET)) {
-                    exit ("Сообщение отправлено. Лог обновлен");
+            if ($response_code == true) {
+                if (addLog(response_code: 200, server: $_SERVER, get: $_GET)) {
+                    exit ("Сообщение отправлено. Файл логирования сохранен.");
                 } else {
                     exit ("Сообщение отправлено. Ошибка записи в лог.");
                 }
@@ -47,26 +49,70 @@ function getRequest(): bool|string
     exit ("Пустой GET запрос");
 }
 
-function addLog(int $response_code, array $server, array $get): bool
+/** Создать файл лога */
+function addLog(mixed $response_code, array $server, array $get): bool
 {
-    $filename = LOG_FILE_NAME . "_" . Carbon::now()->timestamp . ".csv";
-    if (fopen("logs/$filename", "w+")) {
+    // наименование файла
+    $filename = LOG_FILE_NAME . ".csv";
+
+    $header = [
+        "DATE_TIME",
+        "REMOTE_ADDR",
+        "HTTP_X_FORWARDED_FOR",
+        "TELEGRAM_CODE_RESPONSE",
+        "HTTP_USER_AGENT",
+        "GET"
+    ];
+
+
+    if (!file_exists("logs/$filename")) {
+        fopen("logs/$filename", "w");
         $data =
             [
-                ["DATE_TIME", "REMOTE_ADDR", "HTTP_X_FORWARDED_FOR", "TELEGRAM_CODE_RESPONSE", "HTTP_USER_AGENT"],
-                [Carbon::now()->toDateTimeString(), $server['REMOTE_ADDR'], $server['HTTP_X_FORWARDED_FOR'] ?? "null", $response_code, $server['HTTP_USER_AGENT']]
+                $header,
+                [
+                    Carbon::now()->toDateTimeString(),
+                    $server['REMOTE_ADDR'] ?? "null",
+                    $server['HTTP_X_FORWARDED_FOR'] ?? "null",
+                    $response_code,
+                    $server['HTTP_USER_AGENT'] ?? "null",
+                    json_encode($get, JSON_UNESCAPED_UNICODE)
+                ]
             ];
 
         $writer = Writer::createFromPath("logs/$filename", 'w+');
         $writer->insertAll($data);
-        return true;
+    } else {
 
+        $data =
+            [
+                [
+                    Carbon::now()->toDateTimeString(),
+                    $server['REMOTE_ADDR'] ?? "null",
+                    $server['HTTP_X_FORWARDED_FOR'] ?? "null",
+                    $response_code,
+                    $server['HTTP_USER_AGENT'] ?? "null",
+                    json_encode($get, JSON_UNESCAPED_UNICODE)
+                ]
+            ];
+        $reader = Reader::createFromPath("logs/$filename", 'r');
+        $reader->setHeaderOffset(1);
+        $records = $reader->getRecords();
+
+        $writer = Writer::createFromPath("logs/$filename", 'a+');
+        $writer->insertAll($data);
     }
 
-    return false;
+    return true;
+
+
 }
 
-function sendMessage(array $data): float|int
+/**
+ * Отправить сообщение в Telegram
+ * @param array $data Данные GET запроса
+ */
+function sendMessage(array $data): bool
 {
     try {
         $bot = new BotApi(token: TOKEN);
@@ -74,15 +120,15 @@ function sendMessage(array $data): float|int
         $text = $blade->render("message", ['data' => $data]);
 
         if ($bot->sendMessage(chatId: CID, text: "$text", parseMode: "HTML")) {
-            return 200;
+            return true;
         };
     } catch (Exception $e) {
         $code = $e->getCode();
         $message = $e->getMessage();
 
-        return $code;
+        addLog(response_code: "$code $message", server: $_SERVER, get: $_GET); // Лог с ошибкой
 
-        //TODO: Лог в файл об ошибке
+        return false;
     }
 
     exit ("Сообщение в Telegram не доставлено");

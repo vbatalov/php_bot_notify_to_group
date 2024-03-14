@@ -11,8 +11,8 @@ final class TelegramTest extends TestCase
     public function testRequest(): void
     {
         $query = [
-            "текст" => "Заказ номер такой-то тут рандом: " . rand(1, 200),
-            "Теги" => "Тег 1, тег 2",
+            "text" => "Текст сообщения в параметре text=...text",
+            "tags" => "Первый, Второй, С пробелами, Параметр tags",
             "Источник" => "bitrix",
             "Автор" => "Иван",
         ];
@@ -27,7 +27,6 @@ final class TelegramTest extends TestCase
             print_r($response->getBody()->getContents());
             $this->assertTrue(true);
         }
-
 
     }
 
