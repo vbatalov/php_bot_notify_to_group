@@ -61,6 +61,8 @@ function addLog(mixed $response_code, array $server, array $get): bool
         "GET"
     ];
 
+    $HTTP_USER_AGENT = $server['HTTP_USER_AGENT'] ?? "null";
+
 
     if (!file_exists("logs/$filename")) {
         fopen("logs/$filename", "w");
@@ -72,7 +74,7 @@ function addLog(mixed $response_code, array $server, array $get): bool
                     $server['REMOTE_ADDR'] ?? "null",
                     $server['HTTP_X_FORWARDED_FOR'] ?? "null",
                     $response_code,
-                    $server['HTTP_USER_AGENT'] ?? "null",
+                    strval($HTTP_USER_AGENT),
                     json_encode($get, JSON_UNESCAPED_UNICODE)
                 ]
             ];
@@ -86,13 +88,14 @@ function addLog(mixed $response_code, array $server, array $get): bool
                     $server['REMOTE_ADDR'] ?? "null",
                     $server['HTTP_X_FORWARDED_FOR'] ?? "null",
                     $response_code,
-                    $server['HTTP_USER_AGENT'] ?? "null",
+                    strval($HTTP_USER_AGENT),
                     json_encode($get, JSON_UNESCAPED_UNICODE)
                 ]
             ];
 
         $writer = Writer::createFromPath("logs/$filename", 'a+');
     }
+    $writer->setDelimiter(';');
     $writer->insertAll($data);
 
     return true;

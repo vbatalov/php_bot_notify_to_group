@@ -13,7 +13,7 @@ final class TelegramTest extends TestCase
         $query = [
             "text" => "<b>Текст</b> сообщения в параметре text=...text",
             "tags" => "Первый, Второй, С пробелами, Параметр tags",
-            "group" => "skyway",
+            "group" => "personal",
             "Автор" => "Иван",
         ];
 
@@ -22,8 +22,6 @@ final class TelegramTest extends TestCase
             [
                 "query" => $query,
             ]);
-
-
 
         if ($response->getStatusCode() == 200) {
             print_r($response->getBody()->getContents());
