@@ -15,6 +15,6 @@
         }
     }
 @endphp
-{{$data['text']}}
+{!! $data['text'] !!}
 
-{{$tags_string ?? "Empty tags"}}
+{{$tags_string ?? null}}

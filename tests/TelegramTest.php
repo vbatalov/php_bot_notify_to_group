@@ -11,9 +11,9 @@ final class TelegramTest extends TestCase
     public function testRequest(): void
     {
         $query = [
-            "text" => "Текст сообщения в параметре text=...text",
+            "text" => "<b>Текст</b> сообщения в параметре text=...text",
             "tags" => "Первый, Второй, С пробелами, Параметр tags",
-            "Источник" => "bitrix",
+            "group" => 112865662,
             "Автор" => "Иван",
         ];
 
@@ -22,6 +22,8 @@ final class TelegramTest extends TestCase
             [
                 "query" => $query,
             ]);
+
+
 
         if ($response->getStatusCode() == 200) {
             print_r($response->getBody()->getContents());

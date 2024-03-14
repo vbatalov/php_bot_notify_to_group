@@ -12,9 +12,7 @@ use League\Csv\Writer;
 require "vendor/autoload.php";
 require "config.php";
 
-
 getRequest();
-
 
 #[NoReturn] function getRequest()
 {
@@ -25,25 +23,24 @@ getRequest();
         $_FILES,
         $_SERVER);
 
-
     if (!empty($_GET)) {
-        $need_param = "text";
+        $params = [
+            "text",
+            "group",
+        ];
 
-        if (isset($_GET[$need_param])) {
-            $response_code = sendMessage(data: $_GET);
-
-            if ($response_code == true) {
-                if (addLog(response_code: 200, server: $_SERVER, get: $_GET)) {
-                    exit ("Сообщение отправлено. Файл логирования сохранен.");
-                } else {
-                    exit ("Сообщение отправлено. Ошибка записи в лог.");
-                }
-            } else {
-                exit ("Сообщение Telegram не отправлено.");
-            }
+        foreach ($params as $param) {
+            if (!isset($_GET[$param])) exit ("Отсутствует обязательный параметр [$param]");
         }
 
-        exit ("Отсутствует обязательный параметр: [$need_param]");
+        $response_code = sendMessage(data: $_GET);
+
+        if ($response_code == true) {
+            addLog(response_code: 200, server: $_SERVER, get: $_GET);
+            exit ("Сообщение отправлено. Файл логирования сохранен.");
+        } else {
+            exit ("Сообщение Telegram не отправлено. Ошибка будет отображена в файле лог.");
+        }
     }
 
     exit ("Пустой GET запрос");
@@ -81,9 +78,7 @@ function addLog(mixed $response_code, array $server, array $get): bool
             ];
 
         $writer = Writer::createFromPath("logs/$filename", 'w+');
-        $writer->insertAll($data);
     } else {
-
         $data =
             [
                 [
@@ -95,17 +90,12 @@ function addLog(mixed $response_code, array $server, array $get): bool
                     json_encode($get, JSON_UNESCAPED_UNICODE)
                 ]
             ];
-        $reader = Reader::createFromPath("logs/$filename", 'r');
-        $reader->setHeaderOffset(1);
-        $records = $reader->getRecords();
 
         $writer = Writer::createFromPath("logs/$filename", 'a+');
-        $writer->insertAll($data);
     }
+    $writer->insertAll($data);
 
     return true;
-
-
 }
 
 /**
@@ -114,12 +104,13 @@ function addLog(mixed $response_code, array $server, array $get): bool
  */
 function sendMessage(array $data): bool
 {
+
     try {
         $bot = new BotApi(token: TOKEN);
-        $blade = new Blade('views', 'views');
+        $blade = new Blade('views', 'cache');
         $text = $blade->render("message", ['data' => $data]);
 
-        if ($bot->sendMessage(chatId: CID, text: "$text", parseMode: "HTML")) {
+        if ($bot->sendMessage(chatId: $data['group'], text: $text, parseMode: "HTML")) {
             return true;
         };
     } catch (Exception $e) {
