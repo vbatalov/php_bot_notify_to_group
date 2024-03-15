@@ -1,7 +1,8 @@
 {
     "require": {
+        "php": "^8.0",
         "telegram-bot/api": "^2.5",
-        "symfony/http-foundation": "^7.0",
+        "symfony/http-foundation": "6.4.4",
         "jenssegers/blade": "^2.0",
         "nesbot/carbon": "^2.72",
         "guzzlehttp/guzzle": "^7.8",

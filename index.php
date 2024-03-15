@@ -60,7 +60,6 @@ function addLog(mixed $response_code, array $server, array $get): bool
 
     $HTTP_USER_AGENT = $server['HTTP_USER_AGENT'] ?? "null";
 
-
     if (!file_exists(LOG_FILE_NAME)) {
         fopen(LOG_FILE_NAME, "w");
         $data =
@@ -92,7 +91,7 @@ function addLog(mixed $response_code, array $server, array $get): bool
 
         $writer = Writer::createFromPath(LOG_FILE_NAME, 'a+');
     }
-    $writer->setDelimiter(';');
+    $writer->setDelimiter(' ');
     $writer->insertAll($data);
 
     return true;
